@@ -15,6 +15,7 @@ Route::prefix('users')->middleware('jwt.cookie')->group(function () {
     Route::get('refresh', [UserController::class, 'refresh']);
 
     Route::patch('toggle-status/{user}', [UserController::class, 'toggleStatus']);
+    Route::post('update-role/{user}', [UserController::class, 'updateRole']);
     Route::post('update-profile/{user}', [UserController::class, 'updateProfile']);
 });
 

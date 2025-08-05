@@ -239,6 +239,37 @@ class UserController extends Controller
         return $this->setTokenCookie($response, $newToken);
     }
 
+    public function updateRole(Request $request, User $user): JsonResponse
+    {
+        try {
+            DB::beginTransaction();
+
+            $validated = $request->validate([
+                'role' => 'required|string'
+            ]);
+
+            $user->syncRoles([$validated['role']]);
+
+            DB::commit();
+
+            return response()->json([
+                'status'  => 'success',
+                'code'    => 200,
+                'message' => __('response.role_updated'),
+                'data'    => $user
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return response()->json([
+                'status'  => 'error',
+                'code'    => 500,
+                'message' => __('response.error'),
+                'error'   => $e->getMessage()
+            ], 500);
+        }
+    }
+
     public function toggleStatus(User $user): JsonResponse
     {
         try {
