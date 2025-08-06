@@ -6,6 +6,7 @@ use Closure;
 use Exception;
 use Illuminate\Http\Request;
 use Tymon\JWTAuth\Facades\JWTAuth;
+use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\Response;
 
 class JwtFromCookie
@@ -30,7 +31,7 @@ class JwtFromCookie
 
             JWTAuth::setToken($token);
 
-            $user = JWTAuth::parseToken()->authenticate();
+            $user = JWTAuth::authenticate();
 
             if (!$user) {
                 return response()->json([

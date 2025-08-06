@@ -178,14 +178,19 @@ class UserController extends Controller
         $login = $request->input('email');
         $password = $request->input('password');
 
-        $credentialsEmail = ['email' => $login, 'password' => $password, 'status' => true];
+        $credentials = ['email' => $login, 'password' => $password, 'status' => true];
 
-        if ($token = Auth::attempt($credentialsEmail)) {
+        if ($token = Auth::attempt($credentials)) {
+            $user = Auth::user();
+            $roles = $user->getRoleNames();
+            $permissions = $user->getAllPermissions()->pluck('name');
             $response = response()->json([
                 'status' => 'success',
                 'code' => 200,
                 'message' => 'Connexion réussie',
-                'profile' => Auth::user()
+                'profile' => Auth::user(),
+                'roles' => $roles,
+                'permissions' => $permissions,
             ]);
 
             return $this->setTokenCookie($response, $token);
@@ -310,17 +315,16 @@ class UserController extends Controller
             'message' => 'Successfully logged out'
         ]);
 
-        // Supprimer le cookie en définissant une date d'expiration passée
         return $response->cookie(
             'auth_token',
             '',
             -1,
             '/',
-            null,
-            true,
-            true,
-            false,
-            'Strict' // SameSite
+            null,        // domain
+            true,        // secure: doit être true si SameSite=None
+            true,        // httpOnly
+            false,       // raw
+            'None'       // sameSite
         );
     }
 
@@ -386,17 +390,18 @@ class UserController extends Controller
     protected function setTokenCookie(JsonResponse $response, string $token): JsonResponse
     {
         $ttl = Auth::factory()->getTTL();
+        $isSecure = request()->secure() || app()->environment('production');
 
         return $response->cookie(
             'auth_token',
             $token,
             $ttl,
             '/',
-            null,
-            true,
-            true,
-            false,
-            'Strict'
+            null,        // domain
+            true,        // secure: doit être true si SameSite=None
+            true,        // httpOnly
+            false,       // raw
+            'None'       // sameSite
         );
     }
 
