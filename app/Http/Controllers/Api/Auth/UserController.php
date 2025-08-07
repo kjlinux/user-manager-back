@@ -77,16 +77,12 @@ class UserController extends Controller
 
             Mail::to($user->email)->send(new UserCredentialsRegistrationMail($user, $password));
 
-            $token = JWTAuth::fromUser($user);
-
-            $response = response()->json([
+            return response()->json([
                 'status' => 'success',
                 'code' => 201,
                 'message' => __('response.created'),
                 'data' => $user
             ], 201);
-
-            return $this->setTokenCookie($response, $token);
         } catch (\Exception $e) {
             DB::rollBack();
 
@@ -275,6 +271,8 @@ class UserController extends Controller
 
         if ($token = Auth::attempt($credentials)) {
             $user = Auth::user();
+            $user->last_login_at = now();
+            $user->save();
             $roles = $user->getRoleNames();
             $permissions = $user->getAllPermissions()->pluck('name');
             $response = response()->json([

@@ -20,6 +20,7 @@ return new class extends Migration
             $table->boolean('status')->default(true);
             $table->rememberToken();
             $table->softDeletes();
+            $table->timestamp('last_login_at')->nullable();
             $table->timestamps();
         });
 

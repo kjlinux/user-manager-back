@@ -18,11 +18,12 @@ class UserSeeder extends Seeder
             'name' => 'Super',
             'email' => 'admin@nomail.com',
             'password' => bcrypt('admin'),
+            'last_login_at' => now()
         ]);
 
         $user->assignRole('Administrateur');
 
-        $filepath = 'photos/pic.jpg';
+        $filepath = 'photos/profile.jpg';
 
         Media::create([
             'file' => $filepath,
