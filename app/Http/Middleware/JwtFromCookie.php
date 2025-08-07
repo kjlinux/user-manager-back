@@ -6,11 +6,9 @@ use Closure;
 use Exception;
 use Illuminate\Http\Request;
 use Tymon\JWTAuth\Facades\JWTAuth;
-use Illuminate\Support\Facades\Log;
 use Tymon\JWTAuth\Exceptions\TokenExpiredException;
 use Tymon\JWTAuth\Exceptions\TokenInvalidException;
 use Tymon\JWTAuth\Exceptions\JWTException;
-use Symfony\Component\HttpFoundation\Response;
 
 class JwtFromCookie
 {
@@ -25,42 +23,56 @@ class JwtFromCookie
             $token = $request->cookie('auth_token');
 
             if (!$token) {
-                return $this->responder('Token non fourni');
+                return $this->unauthorizedResponse('Token non fourni');
             }
 
             JWTAuth::setToken($token);
             $user = JWTAuth::authenticate();
 
             if (!$user) {
-                return $this->responder('Utilisateur non autorisé');
+                return $this->unauthorizedResponse('Utilisateur non trouvé');
             }
 
             if (!$user->status) {
-                return $this->responder('Compte désactivé');
+                return $this->unauthorizedResponse('Compte désactivé');
             }
         } catch (TokenExpiredException $e) {
-            Log::info('Token expiré pour l\'utilisateur');
-            return $this->responder('Token expiré');
+            return $this->unauthorizedResponse('Token expiré', true);
         } catch (TokenInvalidException $e) {
-            Log::warning('Token invalide');
-            return $this->responder('Token invalide');
+            return $this->unauthorizedResponse('Token invalide', true);
         } catch (JWTException $e) {
-            Log::error('Erreur JWT: ' . $e->getMessage());
-            return $this->responder('Erreur de token');
+            return $this->unauthorizedResponse('Token invalide', true);
         } catch (Exception $e) {
-            Log::error('Erreur d\'authentification: ' . $e->getMessage());
-            return $this->responder('Erreur d\'authentification');
+            return $this->unauthorizedResponse('Erreur d\'authentification');
         }
 
         return $next($request);
     }
 
-    private function responder($message)
+    private function unauthorizedResponse($message, $clearCookie = false)
     {
-        return response()->json([
+        $response = response()->json([
             'status' => 'error',
             'code' => 401,
-            'message' => $message
+            'message' => $message,
+            'requires_login' => true
         ], 401);
+
+        if ($clearCookie) {
+            $response = $response->cookie(
+                'auth_token',
+                '',
+                -1,
+                '/',
+                null,
+                true,
+                true,
+                false,
+                'None'
+            );
+        }
+
+        return $response->header('Access-Control-Allow-Credentials', 'true')
+                      ->header('Access-Control-Allow-Origin', 'http://localhost:5173');
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\Auth;
 
+use App\Models\Log;
 use App\Models\Role;
 use App\Models\User;
 use App\Models\Media;
@@ -23,6 +24,7 @@ class UserController extends Controller
     public function index(): JsonResponse
     {
         $users = User::all();
+
         return response()->json([
             'status' => 'success',
             'code' => 200,
@@ -73,6 +75,9 @@ class UserController extends Controller
                 'user_id' => $user->id,
             ]);
 
+            $currentUser = Auth::user();
+            $this->logEvent("{$currentUser->name} a créé l'utilisateur \"{$user->name}\"");
+
             DB::commit();
 
             Mail::to($user->email)->send(new UserCredentialsRegistrationMail($user, $password));
@@ -105,6 +110,7 @@ class UserController extends Controller
                 'name' => 'required',
             ]);
 
+            $oldName = $user->name;
             $user->email = $request->email;
             $user->name = $request->name;
 
@@ -114,6 +120,10 @@ class UserController extends Controller
             }
 
             $user->save();
+
+            $currentUser = Auth::user();
+            $this->logEvent("{$currentUser->name} a modifié l'utilisateur \"{$oldName}\"");
+
             DB::commit();
 
             if (isset($passToEmail)) {
@@ -172,6 +182,9 @@ class UserController extends Controller
             }
 
             $user->save();
+
+            $this->logEvent("{$user->name} a modifié son profil");
+
             DB::commit();
 
             if ($passToEmail) {
@@ -229,6 +242,8 @@ class UserController extends Controller
 
             $user->load('profilePhoto');
 
+            $this->logEvent("{$user->name} a modifié sa photo de profil");
+
             DB::commit();
 
             if (!Storage::disk('public')->exists($filepath)) {
@@ -273,6 +288,9 @@ class UserController extends Controller
             $user = Auth::user();
             $user->last_login_at = now();
             $user->save();
+
+            $this->logEvent("{$user->name} s'est connecté");
+
             $roles = $user->getRoleNames();
             $permissions = $user->getAllPermissions()->pluck('name');
             $response = response()->json([
@@ -289,12 +307,16 @@ class UserController extends Controller
 
         $user = User::where('email', $login)->first();
         if ($user && Hash::check($password, $user->password) && !$user->status) {
+            $this->logEvent("Tentative de connexion échouée pour {$user->name} (compte désactivé)");
+
             return response()->json([
                 'status' => 'error',
                 'code' => 403,
                 'message' => 'Compte désactivé. Contactez l\'administrateur.'
             ], 403);
         }
+
+        $this->logEvent("Tentative de connexion échouée pour l'email: {$login}");
 
         return response()->json([
             'status' => 'error',
@@ -305,6 +327,9 @@ class UserController extends Controller
 
     public function profile(): JsonResponse
     {
+        $currentUser = Auth::user();
+        $this->logEvent("{$currentUser->name} a consulté son profil");
+
         return response()->json([
             'status' => 'success',
             'code' => 200,
@@ -314,6 +339,9 @@ class UserController extends Controller
 
     public function show(User $user): JsonResponse
     {
+        $currentUser = Auth::user();
+        $this->logEvent("{$currentUser->name} a consulté le profil de \"{$user->name}\"");
+
         return response()->json([
             'status' => 'success',
             'code' => 200,
@@ -336,6 +364,9 @@ class UserController extends Controller
                 ->firstOrFail();
 
             $user->syncRoles([$role->name]);
+
+            $currentUser = Auth::user();
+            $this->logEvent("{$currentUser->name} a modifié le rôle de \"{$user->name}\" vers \"{$role->name}\"");
 
             DB::commit();
 
@@ -362,8 +393,13 @@ class UserController extends Controller
         try {
             DB::beginTransaction();
 
+            $oldStatus = $user->status;
             $user->status = !$user->status;
             $user->save();
+
+            $currentUser = Auth::user();
+            $statusText = $user->status ? 'activé' : 'désactivé';
+            $this->logEvent("{$currentUser->name} a {$statusText} le compte de \"{$user->name}\"");
 
             DB::commit();
 
@@ -389,6 +425,9 @@ class UserController extends Controller
 
     public function logout(): JsonResponse
     {
+        $currentUser = Auth::user();
+        $this->logEvent("{$currentUser->name} s'est déconnecté");
+
         Auth::logout();
 
         $response = response()->json([
@@ -414,7 +453,13 @@ class UserController extends Controller
     {
         try {
             DB::beginTransaction();
+
+            $userName = $user->name;
             $user->delete();
+
+            $currentUser = Auth::user();
+            $this->logEvent("{$currentUser->name} a supprimé l'utilisateur \"{$userName}\"");
+
             DB::commit();
 
             return response()->json([
@@ -439,6 +484,10 @@ class UserController extends Controller
             DB::beginTransaction();
             $user = User::withTrashed()->findOrFail($id);
             $user->restore();
+
+            $currentUser = Auth::user();
+            $this->logEvent("{$currentUser->name} a restauré l'utilisateur \"{$user->name}\"");
+
             DB::commit();
 
             return response()->json([
@@ -461,11 +510,28 @@ class UserController extends Controller
     public function trashed(): JsonResponse
     {
         $users = User::onlyTrashed()->get();
+
         return response()->json([
             'status' => 'success',
             'code' => 200,
             'message' => $users->isEmpty() ? __('response.no-records') : __('response.retrieved'),
             'data' => $users
+        ]);
+    }
+
+    public function getLogs(): JsonResponse
+    {
+        $logs = Log::orderBy('created_at', 'desc')->get();
+
+        $logs->each(function ($log) {
+            $log->created_at_human = $log->created_at->locale('fr')->diffForHumans();
+        });
+
+        return response()->json([
+            'status' => 'success',
+            'code' => 200,
+            'message' => $logs->isEmpty() ? 'Aucun log trouvé' : 'Logs récupérés avec succès',
+            'data' => $logs
         ]);
     }
 
@@ -485,5 +551,13 @@ class UserController extends Controller
             false,
             'None'
         );
+    }
+
+    private function logEvent(string $event): void
+    {
+        Log::create([
+            'id' => Str::uuid(),
+            'event' => $event
+        ]);
     }
 }
