@@ -8,6 +8,7 @@ Route::post('login', [UserController::class, 'login']);
 Route::prefix('users')->middleware('jwt.cookie')->group(function () {
     Route::post('register', [UserController::class, 'store']);
     Route::get('trash', [UserController::class, 'trashed']);
+    Route::get('roles/get', [UserController::class, 'getRoles']);
     Route::post('restore/{user}', [UserController::class, 'restore'])->withTrashed();
 
     Route::get('profile/get', [UserController::class, 'profile']);

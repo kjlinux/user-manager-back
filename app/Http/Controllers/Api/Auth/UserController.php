@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\Auth;
 
+use App\Models\Role;
 use App\Models\User;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
@@ -28,6 +29,18 @@ class UserController extends Controller
         ]);
     }
 
+    public function getRoles(): JsonResponse
+    {
+        $roles = Role::all();
+
+        return response()->json([
+            'status' => 'success',
+            'code' => 200,
+            'message' => __('response.retrieved'),
+            'data' => $roles
+        ]);
+    }
+
     public function store(Request $request): JsonResponse
     {
         try {
@@ -36,6 +49,7 @@ class UserController extends Controller
             $request->validate([
                 'email' => 'required|email|unique:users',
                 'name' => 'required',
+                'role_id' => 'required|exists:roles,id',
             ]);
 
             $password = $request->has('password') && !empty($request->password)
@@ -47,6 +61,8 @@ class UserController extends Controller
                 'name' => $request->name,
                 'password' => Hash::make($password),
             ]);
+
+            $user->syncRoles([$request->role_id]);
 
             DB::commit();
 
@@ -231,29 +247,20 @@ class UserController extends Controller
         ]);
     }
 
-    public function refresh(): JsonResponse
-    {
-        $newToken = Auth::refresh();
-
-        $response = response()->json([
-            'status' => 'success',
-            'code' => 200,
-            'message' => 'Token refreshed successfully'
-        ]);
-
-        return $this->setTokenCookie($response, $newToken);
-    }
-
     public function updateRole(Request $request, User $user): JsonResponse
     {
         try {
             DB::beginTransaction();
 
             $validated = $request->validate([
-                'role' => 'required|string'
+                'role_id' => 'required|uuid'
             ]);
 
-            $user->syncRoles([$validated['role']]);
+            $role = Role::where('id', $validated['role_id'])
+                ->where('guard_name', 'api')
+                ->firstOrFail();
+
+            $user->syncRoles([$role->name]);
 
             DB::commit();
 
@@ -320,11 +327,11 @@ class UserController extends Controller
             '',
             -1,
             '/',
-            null,        // domain
-            true,        // secure: doit être true si SameSite=None
-            true,        // httpOnly
-            false,       // raw
-            'None'       // sameSite
+            null,
+            true,
+            true,
+            false,
+            'None'
         );
     }
 
@@ -397,23 +404,11 @@ class UserController extends Controller
             $token,
             $ttl,
             '/',
-            null,        // domain
-            true,        // secure: doit être true si SameSite=None
-            true,        // httpOnly
-            false,       // raw
-            'None'       // sameSite
+            null,
+            true,
+            true,
+            false,
+            'None'
         );
-    }
-
-    protected function respondWithToken(string $token): JsonResponse
-    {
-        $response = response()->json([
-            'status' => 'success',
-            'code' => 200,
-            'message' => 'Authentication successful',
-            'profile' => Auth::user()
-        ]);
-
-        return $this->setTokenCookie($response, $token);
     }
 }

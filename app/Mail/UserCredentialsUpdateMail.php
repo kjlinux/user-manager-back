@@ -32,7 +32,7 @@ class UserCredentialsUpdateMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            from: new Address('assurexpat@assursuite.com', 'AssurExpat'),
+            from: new Address('mail@nomail.com', 'User Manager'),
             subject: 'Vos identifiants mis à jour'
         );
     }

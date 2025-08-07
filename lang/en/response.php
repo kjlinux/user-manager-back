@@ -11,4 +11,5 @@ return [
     'password_reset' => 'Mot de passe réinitialisé avec succès',
     'role_updated' => 'Rôle utilisateur mis à jour avec succès',
     'invalid_current_password' => 'Le mot de passe actuel est incorrect',
+    'status_updated' => 'Statut mis à jour avec succès',
 ];

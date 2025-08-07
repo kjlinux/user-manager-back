@@ -14,6 +14,7 @@ class User extends Authenticatable implements JWTSubject
     use HasUuids, SoftDeletes, Notifiable, HasRoles;
 
     protected $guarded = ['id'];
+    protected $with = ['roles'];
 
     /**
      * Get the identifier that will be stored in the subject claim of the JWT.
@@ -52,7 +53,6 @@ class User extends Authenticatable implements JWTSubject
      * @var list<string>
      */
     protected $hidden = [
-        'id',
         'password',
         'remember_token',
     ];
