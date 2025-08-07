@@ -72,6 +72,6 @@ class User extends Authenticatable implements JWTSubject
 
     public function profilePhoto()
     {
-        return $this->hasOne(Media::class, 'user_id', 'id');
+        return $this->hasOne(Media::class, 'user_id');
     }
 }

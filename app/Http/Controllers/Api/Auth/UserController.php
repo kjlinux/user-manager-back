@@ -209,8 +209,9 @@ class UserController extends Controller
             DB::beginTransaction();
 
             if ($user->profilePhoto) {
-                if (Storage::disk('public')->exists($user->profilePhoto->file)) {
-                    Storage::disk('public')->delete($user->profilePhoto->file);
+                $oldFilePath = $user->profilePhoto->file;
+                if (Storage::disk('public')->exists($oldFilePath)) {
+                    Storage::disk('public')->delete($oldFilePath);
                 }
                 $user->profilePhoto->delete();
             }
@@ -219,14 +220,24 @@ class UserController extends Controller
             $filename = Str::uuid() . '.' . $file->getClientOriginalExtension();
             $filepath = 'photos/' . $filename;
 
-            $file->storeAs('public/photos', $filename);
+            $storedPath = $file->storeAs('photos', $filename, 'public');
+
+            if (!$storedPath) {
+                throw new \Exception('Échec de la sauvegarde du fichier');
+            }
 
             $media = Media::create([
                 'file' => $filepath,
                 'user_id' => $user->id,
             ]);
 
+            $user->load('profilePhoto');
+
             DB::commit();
+
+            if (!Storage::disk('public')->exists($filepath)) {
+                throw new \Exception('Le fichier n\'a pas été sauvegardé correctement');
+            }
 
             return response()->json([
                 'status' => 'success',
@@ -234,7 +245,9 @@ class UserController extends Controller
                 'message' => 'Photo de profil mise à jour avec succès.',
                 'data' => [
                     'url' => asset('storage/' . $filepath),
-                    'profile_photo' => $media
+                    'user' => $user,
+                    'profile_photo' => $media,
+                    'file_exists' => Storage::disk('public')->exists($filepath)
                 ]
             ], 200);
         } catch (\Exception $e) {
@@ -248,7 +261,7 @@ class UserController extends Controller
                 'status' => 'error',
                 'code' => 500,
                 'message' => 'Une erreur est survenue lors de la mise à jour de la photo de profil.',
-                'error' => app()->environment('local') ? $e->getMessage() : 'Erreur interne du serveur'
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
@@ -466,7 +479,7 @@ class UserController extends Controller
         return $response->cookie(
             'auth_token',
             $token,
-            $ttl,
+            300,
             '/',
             null,
             true,
