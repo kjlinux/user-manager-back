@@ -14,7 +14,7 @@ class User extends Authenticatable implements JWTSubject
     use HasUuids, SoftDeletes, Notifiable, HasRoles;
 
     protected $guarded = ['id'];
-    protected $with = ['roles'];
+    protected $with = ['roles', 'profilePhoto'];
 
     /**
      * Get the identifier that will be stored in the subject claim of the JWT.
@@ -68,5 +68,10 @@ class User extends Authenticatable implements JWTSubject
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    public function profilePhoto()
+    {
+        return $this->hasOne(Media::class, 'user_id', 'id');
     }
 }

@@ -18,6 +18,7 @@ Route::prefix('users')->middleware('jwt.cookie')->group(function () {
     Route::patch('toggle-status/{user}', [UserController::class, 'toggleStatus']);
     Route::post('update-role/{user}', [UserController::class, 'updateRole']);
     Route::post('update-profile/{user}', [UserController::class, 'updateProfile']);
+    Route::post('update-profile-photo/{user}', [UserController::class, 'updateProfilePhoto']);
 });
 
 Route::middleware('jwt.cookie')->group(function () {

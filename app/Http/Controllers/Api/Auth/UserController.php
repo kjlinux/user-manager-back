@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Auth;
 
 use App\Models\Role;
 use App\Models\User;
+use App\Models\Media;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
@@ -14,6 +15,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\UserCredentialsUpdateMail;
+use Illuminate\Support\Facades\Storage;
 use App\Mail\UserCredentialsRegistrationMail;
 
 class UserController extends Controller
@@ -64,6 +66,13 @@ class UserController extends Controller
 
             $user->syncRoles([$request->role_id]);
 
+            $filepath = 'photos/pic.jpg';
+
+            Media::create([
+                'file' => $filepath,
+                'user_id' => $user->id,
+            ]);
+
             DB::commit();
 
             Mail::to($user->email)->send(new UserCredentialsRegistrationMail($user, $password));
@@ -80,6 +89,7 @@ class UserController extends Controller
             return $this->setTokenCookie($response, $token);
         } catch (\Exception $e) {
             DB::rollBack();
+
             return response()->json([
                 'status' => 'error',
                 'code' => 500,
@@ -189,6 +199,60 @@ class UserController extends Controller
         }
     }
 
+    public function updateProfilePhoto(Request $request, User $user)
+    {
+        $request->validate([
+            'photo' => 'required|image|mimes:jpeg,jpg,png,gif,webp|max:4096',
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            if ($user->profilePhoto) {
+                if (Storage::disk('public')->exists($user->profilePhoto->file)) {
+                    Storage::disk('public')->delete($user->profilePhoto->file);
+                }
+                $user->profilePhoto->delete();
+            }
+
+            $file = $request->file('photo');
+            $filename = Str::uuid() . '.' . $file->getClientOriginalExtension();
+            $filepath = 'photos/' . $filename;
+
+            $file->storeAs('public/photos', $filename);
+
+            $media = Media::create([
+                'file' => $filepath,
+                'user_id' => $user->id,
+            ]);
+
+            DB::commit();
+
+            return response()->json([
+                'status' => 'success',
+                'code' => 200,
+                'message' => 'Photo de profil mise à jour avec succès.',
+                'data' => [
+                    'url' => asset('storage/' . $filepath),
+                    'profile_photo' => $media
+                ]
+            ], 200);
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            if (isset($filepath) && Storage::disk('public')->exists($filepath)) {
+                Storage::disk('public')->delete($filepath);
+            }
+
+            return response()->json([
+                'status' => 'error',
+                'code' => 500,
+                'message' => 'Une erreur est survenue lors de la mise à jour de la photo de profil.',
+                'error' => app()->environment('local') ? $e->getMessage() : 'Erreur interne du serveur'
+            ], 500);
+        }
+    }
+
     public function login(Request $request): JsonResponse
     {
         $login = $request->input('email');
@@ -207,7 +271,7 @@ class UserController extends Controller
                 'profile' => Auth::user(),
                 'roles' => $roles,
                 'permissions' => $permissions,
-            ]);
+            ], 200);
 
             return $this->setTokenCookie($response, $token);
         }
