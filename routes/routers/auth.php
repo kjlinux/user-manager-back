@@ -6,7 +6,6 @@ use App\Http\Controllers\Api\Auth\UserController;
 Route::post('login', [UserController::class, 'login']);
 
 Route::prefix('users')->middleware('jwt.cookie')->group(function () {
-    Route::post('register', [UserController::class, 'store']);
     Route::get('trash', [UserController::class, 'trashed']);
     Route::get('roles/get', [UserController::class, 'getRoles']);
     Route::get('logs/get', [UserController::class, 'getLogs']);
@@ -14,7 +13,6 @@ Route::prefix('users')->middleware('jwt.cookie')->group(function () {
 
     Route::get('profile/get', [UserController::class, 'profile']);
     Route::post('logout', [UserController::class, 'logout']);
-    Route::get('refresh', [UserController::class, 'refresh']);
 
     Route::patch('toggle-status/{user}', [UserController::class, 'toggleStatus']);
     Route::post('update-role/{user}', [UserController::class, 'updateRole']);

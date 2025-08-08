@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\Role;
 use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -10,6 +11,7 @@ use Illuminate\Database\Eloquent\Factories\Factory;
  */
 class RoleFactory extends Factory
 {
+    protected $model = Role::class;
     /**
      * Define the model's default state.
      *
@@ -18,7 +20,7 @@ class RoleFactory extends Factory
     public function definition(): array
     {
         $name = fake()->unique()->jobTitle();
-        
+
         return [
             'id' => Str::uuid(),
             'name' => $name,
@@ -29,7 +31,7 @@ class RoleFactory extends Factory
 
     public function admin(): static
     {
-        return $this->state(fn (array $attributes) => [
+        return $this->state(fn(array $attributes) => [
             'name' => 'Admin',
             'code' => 'admin',
         ]);
@@ -37,7 +39,7 @@ class RoleFactory extends Factory
 
     public function user(): static
     {
-        return $this->state(fn (array $attributes) => [
+        return $this->state(fn(array $attributes) => [
             'name' => 'User',
             'code' => 'user',
         ]);
