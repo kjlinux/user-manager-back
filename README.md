@@ -19,7 +19,9 @@ User Manager est une application web full-stack développée pour la gestion des
 
 ## Liens du Projet
 
-**Application en ligne** : https://user-manager-front-beta.vercel.app/
+**Application en ligne** : https://user-manager-front.vercel.app
+• Email: admin@nomail.com ou user@nomail.com
+• Mot de passe : admin
 
 **Dépôts GitHub**
 • Backend (API Laravel) : https://github.com/kjlinux/user-manager-back
