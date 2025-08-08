@@ -13,6 +13,7 @@ Route::prefix('users')->middleware('jwt.cookie')->group(function () {
 
     Route::get('profile/get', [UserController::class, 'profile']);
     Route::post('logout', [UserController::class, 'logout']);
+    Route::post('refresh', [UserController::class, 'refresh']);
 
     Route::patch('toggle-status/{user}', [UserController::class, 'toggleStatus']);
     Route::post('update-role/{user}', [UserController::class, 'updateRole']);

@@ -68,7 +68,7 @@ class UserController extends Controller
 
             $user->syncRoles([$request->role_id]);
 
-            $filepath = 'photos/pic.jpg';
+            $filepath = 'photos/profile.jpg';
 
             Media::create([
                 'file' => $filepath,
@@ -543,7 +543,7 @@ class UserController extends Controller
         return $response->cookie(
             'auth_token',
             $token,
-            60,
+            1,
             '/',
             null,
             true,

@@ -16,12 +16,12 @@ use App\Mail\UserCredentialsRegistrationMail;
 beforeEach(function () {
     $this->withoutMiddleware(JwtFromCookie::class);
     $admin = actingAsAdmin();
-    $this->actingAs($admin, 'api'); // Use $this instead of test()
+    $this->actingAs($admin, 'api');
     Storage::fake('public');
     Mail::fake();
 });
 
-// Helper function pour créer un utilisateur admin
+
 function actingAsAdmin()
 {
     $adminRole = Role::create([
@@ -32,7 +32,7 @@ function actingAsAdmin()
         'created_at' => now(),
         'updated_at' => now()
     ]);
-    
+
     $admin = User::create([
         'id' => Str::uuid(),
         'name' => 'Admin User',
@@ -42,15 +42,15 @@ function actingAsAdmin()
         'created_at' => now(),
         'updated_at' => now()
     ]);
-    
+
     $admin->assignRole($adminRole);
-    
+
     return $admin;
 }
 
 describe('UserController - Index', function () {
     it('can retrieve all users', function () {
-        // Créer 3 utilisateurs manuellement
+
         for ($i = 1; $i <= 3; $i++) {
             User::create([
                 'id' => Str::uuid(),
@@ -62,18 +62,18 @@ describe('UserController - Index', function () {
                 'updated_at' => now()
             ]);
         }
-        
+
         $response = $this->getJson('/api/auth/users');
-        
+
         $response->assertStatus(200)
-                ->assertJsonStructure([
-                    'status',
-                    'code',
-                    'message',
-                    'data' => [
-                        '*' => ['id', 'name', 'email']
-                    ]
-                ]);
+            ->assertJsonStructure([
+                'status',
+                'code',
+                'message',
+                'data' => [
+                    '*' => ['id', 'name', 'email']
+                ]
+            ]);
     });
 });
 
@@ -87,36 +87,36 @@ describe('UserController - Store', function () {
             'created_at' => now(),
             'updated_at' => now()
         ]);
-        
+
         $userData = [
             'name' => 'John Doe',
             'email' => 'john@example.com',
             'role_id' => $role->id,
         ];
-        
+
         $response = $this->postJson('/api/auth/users', $userData);
-        
+
         $response->assertStatus(201)
-                ->assertJson([
-                    'status' => 'success',
-                    'code' => 201,
-                ]);
-        
+            ->assertJson([
+                'status' => 'success',
+                'code' => 201,
+            ]);
+
         $this->assertDatabaseHas('users', [
             'email' => 'john@example.com',
             'name' => 'John Doe'
         ]);
-        
+
         Mail::assertSent(UserCredentialsRegistrationMail::class);
-        
-        // Vérifier qu'un media par défaut a été créé
+
+
         $user = User::where('email', 'john@example.com')->first();
         $this->assertDatabaseHas('media', [
             'user_id' => $user->id,
             'file' => 'photos/pic.jpg'
         ]);
     });
-    
+
     it('can create user with custom password', function () {
         $role = Role::create([
             'id' => Str::uuid(),
@@ -126,18 +126,18 @@ describe('UserController - Store', function () {
             'created_at' => now(),
             'updated_at' => now()
         ]);
-        
+
         $userData = [
             'name' => 'John Doe',
             'email' => 'john@example.com',
             'role_id' => $role->id,
             'password' => 'custompassword123'
         ];
-        
+
         $response = $this->postJson('/api/auth/users', $userData);
-        
+
         $response->assertStatus(201);
-        
+
         $user = User::where('email', 'john@example.com')->first();
         $this->assertTrue(Hash::check('custompassword123', $user->password));
     });
@@ -154,27 +154,27 @@ describe('UserController - Update', function () {
             'created_at' => now(),
             'updated_at' => now()
         ]);
-        
+
         $updateData = [
             'name' => 'Updated Name',
             'email' => 'updated@example.com',
         ];
-        
+
         $response = $this->putJson("/api/auth/users/{$user->id}", $updateData);
-        
+
         $response->assertStatus(200)
-                ->assertJson([
-                    'status' => 'success',
-                    'code' => 200,
-                ]);
-        
+            ->assertJson([
+                'status' => 'success',
+                'code' => 200,
+            ]);
+
         $this->assertDatabaseHas('users', [
             'id' => $user->id,
             'name' => 'Updated Name',
             'email' => 'updated@example.com'
         ]);
     });
-    
+
     it('can update user password', function () {
         $user = User::create([
             'id' => Str::uuid(),
@@ -185,20 +185,20 @@ describe('UserController - Update', function () {
             'created_at' => now(),
             'updated_at' => now()
         ]);
-        
+
         $updateData = [
             'name' => $user->name,
             'email' => $user->email,
             'password' => 'newpassword123'
         ];
-        
+
         $response = $this->putJson("/api/auth/users/{$user->id}", $updateData);
-        
+
         $response->assertStatus(200);
-        
+
         $user->refresh();
         $this->assertTrue(Hash::check('newpassword123', $user->password));
-        
+
         Mail::assertSent(UserCredentialsUpdateMail::class);
     });
 });
@@ -214,18 +214,18 @@ describe('UserController - Profile Update', function () {
             'created_at' => now(),
             'updated_at' => now()
         ]);
-        
+
         $this->actingAs($user, 'api');
-        
+
         $updateData = [
             'name' => 'Updated Profile Name',
             'email' => 'updated.profile@example.com',
         ];
-        
+
         $response = $this->postJson("/api/auth/users/update-profile/{$user->id}", $updateData);
-        
+
         $response->assertStatus(200);
-        
+
         $this->assertDatabaseHas('users', [
             'id' => $user->id,
             'name' => 'Updated Profile Name',
@@ -245,24 +245,24 @@ describe('UserController - Profile Photo', function () {
             'created_at' => now(),
             'updated_at' => now()
         ]);
-        
+
         $file = UploadedFile::fake()->image('profile.jpg');
-        
+
         $response = $this->postJson("/api/auth/users/update-profile-photo/{$user->id}", [
             'photo' => $file
         ]);
-        
+
         $response->assertStatus(200)
-                ->assertJson([
-                    'status' => 'success',
-                    'code' => 200,
-                ]);
-        
+            ->assertJson([
+                'status' => 'success',
+                'code' => 200,
+            ]);
+
         $this->assertDatabaseHas('media', [
             'user_id' => $user->id,
         ]);
-        
-        // Vérifier que le fichier a été stocké
+
+
         $media = Media::where('user_id', $user->id)->first();
         Storage::disk('public')->assertExists($media->file);
     });
@@ -279,29 +279,29 @@ describe('UserController - Authentication', function () {
             'created_at' => now(),
             'updated_at' => now()
         ]);
-        
+
         $response = $this->postJson('/api/auth/login', [
             'email' => 'test@example.com',
             'password' => 'password123'
         ]);
-        
+
         $response->assertStatus(200)
-                ->assertJson([
-                    'status' => 'success',
-                    'code' => 200,
-                    'message' => 'Connexion réussie'
-                ])
-                ->assertJsonStructure([
-                    'profile',
-                    'roles',
-                    'permissions'
-                ]);
-        
-        // Vérifier que last_login_at a été mis à jour
+            ->assertJson([
+                'status' => 'success',
+                'code' => 200,
+                'message' => 'Connexion réussie'
+            ])
+            ->assertJsonStructure([
+                'profile',
+                'roles',
+                'permissions'
+            ]);
+
+
         $user->refresh();
         $this->assertNotNull($user->last_login_at);
     });
-    
+
     it('fails login with disabled account', function () {
         $user = User::create([
             'id' => Str::uuid(),
@@ -312,18 +312,18 @@ describe('UserController - Authentication', function () {
             'created_at' => now(),
             'updated_at' => now()
         ]);
-        
+
         $response = $this->postJson('/api/auth/login', [
             'email' => 'disabled@example.com',
             'password' => 'password123'
         ]);
-        
+
         $response->assertStatus(403)
-                ->assertJson([
-                    'status' => 'error',
-                    'code' => 403,
-                    'message' => 'Compte désactivé. Contactez l\'administrateur.'
-                ]);
+            ->assertJson([
+                'status' => 'error',
+                'code' => 403,
+                'message' => 'Compte désactivé. Contactez l\'administrateur.'
+            ]);
     });
 });
 
@@ -338,7 +338,7 @@ describe('UserController - Role Management', function () {
             'created_at' => now(),
             'updated_at' => now()
         ]);
-        
+
         $newRole = Role::create([
             'id' => Str::uuid(),
             'name' => 'manager',
@@ -347,17 +347,17 @@ describe('UserController - Role Management', function () {
             'created_at' => now(),
             'updated_at' => now()
         ]);
-        
+
         $response = $this->postJson("/api/auth/users/update-role/{$user->id}", [
             'role_id' => $newRole->id
         ]);
-        
+
         $response->assertStatus(200)
-                ->assertJson([
-                    'status' => 'success',
-                    'code' => 200,
-                ]);
-        
+            ->assertJson([
+                'status' => 'success',
+                'code' => 200,
+            ]);
+
         $this->assertTrue($user->fresh()->hasRole($newRole->name));
     });
 });
@@ -373,18 +373,18 @@ describe('UserController - Status Management', function () {
             'created_at' => now(),
             'updated_at' => now()
         ]);
-        
+
         $response = $this->patchJson("/api/auth/users/toggle-status/{$user->id}");
-        
+
         $response->assertStatus(200)
-                ->assertJson([
-                    'status' => 'success',
-                    'code' => 200,
-                    'data' => [
-                        'new_status' => false
-                    ]
-                ]);
-        
+            ->assertJson([
+                'status' => 'success',
+                'code' => 200,
+                'data' => [
+                    'new_status' => false
+                ]
+            ]);
+
         $this->assertTrue(!$user->fresh()->status);
     });
 });
@@ -399,22 +399,22 @@ describe('UserController - Logging', function () {
             'created_at' => now(),
             'updated_at' => now()
         ]);
-        
+
         $userData = [
             'name' => 'John Doe',
             'email' => 'john@example.com',
             'role_id' => $role->id,
         ];
-        
+
         $response = $this->postJson('/api/auth/users', $userData);
-        
+
         $response->assertStatus(201);
-        
+
         $this->assertDatabaseHas('logs', [
             'event' => auth()->user()->name . ' a créé l\'utilisateur "John Doe"'
         ]);
     });
-    
+
     it('can retrieve logs', function () {
         Log::create([
             'id' => Str::uuid(),
@@ -422,17 +422,17 @@ describe('UserController - Logging', function () {
             'created_at' => now(),
             'updated_at' => now()
         ]);
-        
+
         $response = $this->getJson('/api/auth/users/logs/get');
-        
+
         $response->assertStatus(200)
-                ->assertJsonStructure([
-                    'status',
-                    'code',
-                    'message',
-                    'data' => [
-                        '*' => ['id', 'event', 'created_at', 'created_at_human']
-                    ]
-                ]);
+            ->assertJsonStructure([
+                'status',
+                'code',
+                'message',
+                'data' => [
+                    '*' => ['id', 'event', 'created_at', 'created_at_human']
+                ]
+            ]);
     });
 });
