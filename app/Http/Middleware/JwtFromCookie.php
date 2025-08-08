@@ -41,9 +41,7 @@ class JwtFromCookie
         } catch (TokenInvalidException $e) {
             return $this->unauthorizedResponse('Token invalide', true);
         } catch (JWTException $e) {
-            return $this->unauthorizedResponse('Token invalide', true);
-        } catch (Exception $e) {
-            return $this->unauthorizedResponse('Erreur d\'authentification');
+            return $this->unauthorizedResponse('Erreur JWT', true);
         }
 
         return $next($request);
@@ -73,6 +71,6 @@ class JwtFromCookie
         }
 
         return $response->header('Access-Control-Allow-Credentials', 'true')
-                      ->header('Access-Control-Allow-Origin', 'http://localhost:5173');
+            ->header('Access-Control-Allow-Origin', 'http://localhost:5173');
     }
 }

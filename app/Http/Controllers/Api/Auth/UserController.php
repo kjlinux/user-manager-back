@@ -543,7 +543,7 @@ class UserController extends Controller
         return $response->cookie(
             'auth_token',
             $token,
-            1,
+            $ttl,
             '/',
             null,
             true,

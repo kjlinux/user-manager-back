@@ -1,61 +1,264 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# User Manager - Application de Gestion des Utilisateurs
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+## Présentation du Projet
 
-## About Laravel
+User Manager est une application web full-stack développée pour la gestion des utilisateurs avec authentification sécurisée, système de rôles et interface d'administration complète. L'application permet de créer, modifier, supprimer et consulter les utilisateurs avec des permissions différenciées selon les rôles.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## Objectifs Réalisés
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+• Interface d'authentification sécurisée avec JWT
+• CRUD complet des utilisateurs
+• Système de rôles (admin/user) avec permissions
+• Pagination et recherche par nom/email
+• Upload de photo de profil
+• Filtrage dynamique et tri dans le tableau
+• Système de logs pour l'historique des actions
+• Tests unitaires avec Pest
+• Interface responsive avec PrimeVue
+• Sécurisation des tokens JWT via HTTP-only cookies
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## Liens du Projet
 
-## Learning Laravel
+**Application en ligne** : https://user-manager-front.vercel.app
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+**Dépôts GitHub**
+• Backend (API Laravel) : https://github.com/kjlinux/user-manager-back
+• Frontend (Vue.js) : https://github.com/kjlinux/user-manager-front
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+## Installation et Lancement du Projet
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+### Prérequis Système
 
-## Laravel Sponsors
+• Apache : Version 2.4 minimum
+• PHP : Version 8.2 minimum
+• PostgreSQL : Version récente
+• Node.js : Version LTS récente
+• Git : Pour le clonage des dépôts
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+### Option 1 : Installation avec Laragon (Recommandée)
 
-### Premium Partners
+#### 1. Installation de Laragon
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+1. Télécharger et installer Laragon
+2. Clic droit sur l'icône Laragon dans la barre des tâches
+3. Apache → Version → Sélectionner la version la plus récente
+4. PHP → Version → Sélectionner la version la plus récente
+5. Clic droit → Outils → Quick Add → PostgreSQL
+6. Arrêter et redémarrer Laragon (autoriser les permissions Windows si demandées)
 
-## Contributing
+#### 2. Récupération du Code Source
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+```bash
+# Cloner les dépôts ou télécharger en ZIP
+git clone https://github.com/kjlinux/user-manager-back.git
+git clone https://github.com/kjlinux/user-manager-front.git
+```
 
-## Code of Conduct
+Placer les deux dossiers dans le répertoire `C:\laragon\www\`
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+#### 3. Configuration de la Base de Données
 
-## Security Vulnerabilities
+Après l'installation de PostgreSQL, il est nécessaire de créer la base de données :
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+1. Télécharger un client PostgreSQL :
+   • pgAdmin 4 (interface graphique officielle)
+   • DBeaver (client universel gratuit)
+   • Ou tout autre client PostgreSQL
 
-## License
+2. Créer la base de données :
+   • Se connecter à PostgreSQL via le client choisi
+   • Créer une nouvelle base de données nommée `user_manager`
+   • Définir un utilisateur avec les permissions appropriées (ou utiliser postgres)
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+#### 4. Configuration du Backend (user-manager-back)
+
+Ouvrir un terminal dans le dossier `user-manager-back` :
+
+```bash
+# Installation des dépendances Composer
+composer install
+
+# Création du fichier de configuration
+cp .env.example .env
+```
+
+Modifier le fichier `.env` avec les configurations suivantes :
+
+```env
+APP_NAME=user-manager-api
+APP_LOCALE=fr
+APP_FALLBACK_LOCALE=fr
+
+DB_CONNECTION=pgsql
+DB_HOST=127.0.0.1
+DB_PORT=5432
+DB_DATABASE=user_manager
+DB_USERNAME=votre_nom_utilisateur
+DB_PASSWORD=votre_mot_de_passe
+```
+
+```bash
+# Génération des clés de sécurité
+php artisan key:generate
+php artisan jwt:secret
+
+# Migration et seeding de la base de données
+php artisan migrate:fresh --seed
+
+# Exécution des tests
+php artisan test
+
+# Lancement du serveur de développement
+php artisan serve
+```
+
+#### 5. Configuration du Frontend (user-manager-front)
+
+Installer PNPM globalement si ce n'est pas déjà fait :
+
+```bash
+npm install -g pnpm
+```
+
+Ouvrir un terminal dans le dossier `user-manager-front` :
+
+```bash
+# Installation des dépendances
+pnpm install
+
+# Lancement du serveur de développement
+pnpm dev
+```
+
+#### 6. Accès à l'Application
+
+1. Se rendre sur l'adresse indiquée par le terminal (généralement localhost:5173)
+2. Se connecter avec les identifiants par défaut créés par les seeders
+
+### Option 2 : Installation avec WAMP/XAMPP
+
+Si vous utilisez WAMP ou XAMPP, assurez-vous d'avoir :
+• Apache 2.4 minimum
+• PHP 8.2 minimum
+• PostgreSQL installé séparément
+
+Suivez ensuite les mêmes étapes de configuration que pour Laragon, en adaptant les chemins vers votre environnement local.
+
+## Stack Technique Utilisée
+
+### Architecture Générale
+
+L'application suit une architecture découplée avec une API REST backend et une application frontend monopage (SPA).
+
+### Backend - API REST
+
+**Framework Principal** : Laravel
+• Système d'authentification JWT avec cookies HTTP-only
+• Migrations et seeders pour la gestion de la base de données
+
+**Base de Données** : PostgreSQL
+
+**Authentification** : JWT (JSON Web Tokens)
+• Stockage sécurisé via HTTP-only cookies
+
+**Packages Utilisés** :
+• Tymon JWT-Auth
+• Spatie Laravel Permission
+• Pest (Installé nativement dans Laravel)
+
+### Frontend - Application Web
+
+**Framework Principal** : Vue.js 3
+
+**Gestionnaire d'État** : Pinia
+
+**Interface Utilisateur** : PrimeVue
+
+**Gestionnaire de Paquets** : PNPM
+
+## Structure du Code
+
+### Architecture Backend (user-manager-back)
+
+```
+user-manager-back/
+├── app/
+│   ├── Http/
+│   │   ├── Controllers/
+│   │   │   └── UserController.php
+│   │   └── Middleware/
+│   │       └── JWTFromCookie.php
+│   └── Models/
+│       ├── User.php
+│       ├── Log.php
+│       └── Media.php
+├── database/
+│   ├── migrations/
+│   └── seeders/
+│       └── UserSeeder.php
+└── tests/
+```
+
+**Composants Principaux** :
+• **UserController.php** : Gère toutes les opérations CRUD des utilisateurs
+• **JWTFromCookie.php** : Middleware pour extraire le token JWT des cookies
+• **Models** : User, Log et Media pour la gestion des données
+• **Seeders** : Génération de données de test
+• **Tests** : Tests unitaires avec Pest (exécutables via `php artisan test`)
+
+### Architecture Frontend (user-manager-front)
+
+```
+user-manager-front/
+├── src/
+│   ├── services/
+│   │   └── authService.js
+│   ├── stores/
+│   │   └── auth.js
+│   ├── directives/
+│   │   └── roleDirective.js
+│   └── views/
+│       └── [vues principales]
+└──
+```
+
+**Composants Principaux** :
+• **authService.js** : Service d'authentification et appels API
+• **auth.js** : Store Pinia pour la gestion de l'état d'authentification
+• **roleDirective.js** : Directive Vue pour l'affichage conditionnel selon les rôles
+• **Views** : Vues principales de l'application
+
+## Fonctionnalités
+
+### Authentification
+
+• Connexion sécurisée avec email/mot de passe
+• Tokens JWT stockés dans des cookies HTTP-only
+• Déconnexion automatique à l'expiration du token
+
+### Gestion des Utilisateurs
+
+• Liste paginée des utilisateurs
+• Recherche par nom et email
+• Création, modification et suppression d'utilisateurs
+• Upload de photos de profil
+• Filtrage et tri dynamiques
+• Changement de mot de passe
+• Activation/Désactivation d'un utilisateur
+• Suppression multiple des utilisateurs
+
+### Système de Rôles
+
+• Rôle Administrateur : accès complet (CRUD)
+• Rôle Utilisateur : lecture seule
+• Affichage conditionnel des fonctionnalités selon les rôles
+
+### Système de Logs
+
+• Historique des actions utilisateurs
+• Traçabilité des modifications
+
+### Tests
+
+• Tests unitaires backend avec Pest
+• Exécution via `php artisan test`
